@@ -121,3 +121,7 @@ vscode.workspace.onDidChangeConfiguration((change) => {
 export function afterConfigUpdate(keys: ConfigKey[], handler: (config: typeof currentConfig) => void) {
   afterConfigHandlers.push([keys, handler])
 }
+
+export async function confirmTraceCommand() {
+  vscode.window.showWarningMessage('TODO: implement confirmTraceCommand')
+}

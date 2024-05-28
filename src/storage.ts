@@ -1,13 +1,15 @@
-import { mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdir as mkdirC, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
+import { log } from 'node:console'
 import * as vscode from 'vscode'
 import type { TraceData } from '../shared/src/traceData'
 import { traceData } from '../shared/src/traceData'
 import { postMessage } from './webview'
 import { sendTraceDir } from './commands'
 import { setStatusBarState } from './statusBar'
+import { confirmTraceCommand, getCurrentConfig } from './configuration'
 
 // TODO: track creation of directories to avoid excess mkdir calls
 
@@ -15,7 +17,7 @@ const mkdir = promisify(mkdirC)
 
 const saveNames: string[] = []
 const projectNames: string[] = []
-let saveName = 'default'
+let saveName = ''
 let projectName = 'Not Named'
 let attemptedGetProjectName = false
 
@@ -47,7 +49,11 @@ export function sendStorageMeta() {
 export async function openSave(name: string) {
   if (!saveNames.includes(name))
     saveNames.push(name)
+  if (name === saveName)
+    return
+
   saveName = name
+  setStoredConfig({ saveName })
   setStatusBarState('saveName', saveName)
 
   const traceDir = await getTraceDir()
@@ -65,6 +71,13 @@ export async function openProject(name: string) {
   const projectPath = await getProjectPath()
   mkdir(projectPath, { recursive: true })
 
+  const config = await getStoredConfig()
+  if (!config.hasSetTraceCommand)
+    confirmTraceCommand().then(() => setStoredConfig({ hasSetTraceCommand: true }))
+
+  if (config.saveName)
+    saveName = config.saveName
+
   const files = readdirSync(projectPath)
   for (const file of files) {
     const savePath = join(projectPath, file)
@@ -78,7 +91,7 @@ export async function openProject(name: string) {
     }
   }
 
-  openSave('default')
+  openSave(saveName)
 }
 
 let context: vscode.ExtensionContext
@@ -100,6 +113,47 @@ export async function getSavePath() {
   const savePath = join(await getProjectPath(), saveName)
   await mkdir(savePath, { recursive: true })
   return savePath
+}
+
+export type StoredConfig =
+  ReturnType<typeof getCurrentConfig> & {
+    hasSetTraceCommand: boolean
+    saveName: string
+  }
+
+async function getConfigPath() {
+  return join(await getProjectPath(), 'tracer.config.json')
+}
+
+async function writeStoredConfig(config: StoredConfig) {
+  const configPath = await getConfigPath()
+
+  try {
+    writeFileSync(configPath, JSON.stringify(config, null, 2))
+  }
+  catch (e) {
+    vscode.window.showErrorMessage('Could not write tracer configuration file for project')
+    log(`${e}`)
+  }
+}
+
+export async function getStoredConfig(): Promise<StoredConfig> {
+  const configPath = await getConfigPath()
+  if (!existsSync(configPath)) {
+    const storedConfig = { ...getCurrentConfig(), hasSetTraceCommand: false, saveName: 'default' }
+    writeStoredConfig(storedConfig)
+    return storedConfig
+  }
+
+  const configString = readFileSync(configPath, { encoding: 'utf8' })
+  // TODO:validator for stored config
+  const json = JSON.parse(configString) as StoredConfig
+  return json
+}
+
+async function setStoredConfig(config: Partial<StoredConfig>) {
+  const newConfig = { ...(await getStoredConfig()), ...config }
+  writeStoredConfig(newConfig)
 }
 
 export async function getTraceDir() {
