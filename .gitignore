@@ -5,6 +5,8 @@
 .cache
 dist
 *.vsix
+devUiDriver/*.js
+devUiDriver/commands.ts
 
 # Node dependencies
 node_modules
