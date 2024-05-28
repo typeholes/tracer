@@ -4,11 +4,13 @@ import { getStatsFromTree } from '../shared/src/traceTree'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
 
 let diagnosticCollection: vscode.DiagnosticCollection
-
 export function initDiagnostics(ctx: vscode.ExtensionContext): void {
   diagnosticCollection
       = vscode.languages.createDiagnosticCollection('tsperf.tracer')
   ctx.subscriptions.push(diagnosticCollection)
+
+  const actionProvider = new TracerCodeActionProvider()
+  vscode.languages.registerCodeActionsProvider('typescript', actionProvider, { providedCodeActionKinds: [vscode.CodeActionKind.QuickFix] })
 }
 
 const fileStatus = new Map<string, 'dirty' | 'clean'>()
@@ -174,3 +176,21 @@ afterConfigUpdate(['enableTraceMetrics'], (config) => {
   if (!config.enableTraceMetrics)
     diagnosticCollection.clear()
 })
+
+class TracerCodeActionProvider implements vscode.CodeActionProvider<vscode.CodeAction> {
+  provideCodeActions(document: vscode.TextDocument, range: vscode.Range | vscode.Selection, _context: vscode.CodeActionContext, _token: vscode. CancellationToken): vscode.CodeAction[] {
+    const diagnostics = diagnosticCollection.get(document.uri)
+    if (!diagnostics)
+      return []
+
+    const codeActions: vscode.CodeAction[] = []
+    diagnostics.forEach((diagnostic) => {
+      if (range.intersection(diagnostic.range)) {
+        const action = new vscode.CodeAction('Goto position in trace', vscode.CodeActionKind.QuickFix)
+        action.command = { title: 'Goto position in trace', command: 'tsperf.tracer.gotoTracePosition', arguments: [document.fileName, document.offsetAt(range.start)] }
+        codeActions.push(action)
+      }
+    })
+    return codeActions
+  }
+}
