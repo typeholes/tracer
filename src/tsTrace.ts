@@ -66,6 +66,8 @@ function performCompilation(
   //   changeCompilerHostLikeToUseCache(host, fileName => toPath(fileName, currentDirectory, getCanonicalFileName))
   enableTracing(sys, options, /* isBuildMode */ false)
 
+  config.options.noEmit = true
+
   const programOptions: CreateProgramOptions = {
     rootNames: fileNames,
     options,
