@@ -3,6 +3,7 @@ import type { FileStat } from '../shared/src/messages'
 import type { DataLine, TraceData, TypeLine } from '../shared/src/traceData'
 import { getTraceFiles, getWorkspacePath } from './storage'
 import { postMessage } from './webview'
+import { typeTimestamps } from './tsTrace'
 
 export interface Tree { id: number, line: DataLine, children: Tree[], types: TypeLine[], childCnt: number, childTypeCnt: number, typeCnt: number }
 function getRoot(): Tree {
@@ -37,8 +38,11 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
 
   treeIndexes = [tree]
 
-  const data = traceData.filter(x => 'id' in x || ('cat' in x)).sort((a, b) => a.ts - b.ts)
-  // const data = traceData.filter(x => 'id' in x || ('cat' in x && x.cat?.startsWith('check'))).sort((a, b) => a.ts - b.ts)
+  const data = traceData.filter(x => 'id' in x || ('cat' in x)).map((x) => {
+    if ('id' in x)
+      x.ts = typeTimestamps.get(x.id) ?? 0
+    return x
+  }).sort((a, b) => a.ts - b.ts)
   for (const line of data) {
     if ('args' in line && line.args?.path && isAbsolute(line.args?.path))
       line.args.path = relative(workspacePath, line.args.path)
@@ -57,8 +61,9 @@ export function toTree(traceData: TraceData, workspacePath: string): Tree {
     }
 
     if (!line.dur) {
-      if ('id' in line)
+      if ('id' in line) {
         curr.typeCnt = curr.types.push(line)
+      }
     }
     else {
       endTs = line.ts + (line.dur ?? 0)

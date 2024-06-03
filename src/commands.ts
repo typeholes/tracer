@@ -12,6 +12,7 @@ import type { CommandId } from './constants'
 import { addTraceFile, clearTraceFiles, getProjectPath, getTraceDir, getWorkspacePath, openSave, openTerminal, openTraceDirectoryExternal, setLastMessageTrigger } from './storage'
 import { addTraceDiagnostics } from './traceDiagnostics'
 import { setStatusBarState } from './statusBar'
+import { runLiveTrace } from './tsTrace'
 
 const readdir = promisify(readdirC)
 
@@ -93,6 +94,7 @@ function gotoTracePosition(context: vscode.ExtensionContext) {
   showTree('', editor.document.fileName, startOffset - (editor.document.getText()[startOffset + 1] === '\n' ? 0 : 1))
 }
 
+const liveTrace = true // TODO config setting
 async function runTrace(args?: unknown[]) {
   const workspacePath = getWorkspacePath()
   const { traceCmd } = getCurrentConfig()
@@ -138,35 +140,55 @@ async function runTrace(args?: unknown[]) {
   postMessage({ message: 'traceStart' })
 
   setStatusBarState('tracing', true)
-  log(`shell: ${process.env.SHELL}`)
-  const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: process.env.SHELL })
 
-  let err = ''
-  cmdProcess.stderr.on('data', data => err += data.toString())
-
-  cmdProcess.stdout.on('data', data => log(data.toString()))
-
-  cmdProcess.on('error', (error) => {
-    vscode.window.showErrorMessage(error.message)
-  })
-
-  cmdProcess.on('exit', async (code) => {
-    log('---- trace stderr -----')
-    log(err)
-    setStatusBarState('tracing', false)
-    if (code) {
-      setStatusBarState('traceError', true)
-      vscode.window.showErrorMessage('error running trace')
-      return
+  if (liveTrace) {
+    try {
+      runLiveTrace(workspacePath, traceDir)
+      setStatusBarState('traceError', false)
     }
-
-    setStatusBarState('traceError', false)
+    catch (e) {
+      vscode.window.showErrorMessage('live trace failed')
+      log(`${e}`)
+      setStatusBarState('traceError', true)
+    }
+    setStatusBarState('tracing', false)
     postMessage({ message: 'traceStop' })
 
     clearTraceFiles()
 
     await sendTraceDir(traceDir)
-  })
+  }
+  else {
+    log(`shell: ${process.env.SHELL}`)
+    const cmdProcess = spawn(fullCmd, [], { cwd: projectPath, shell: process.env.SHELL })
+
+    let err = ''
+    cmdProcess.stderr.on('data', data => err += data.toString())
+
+    cmdProcess.stdout.on('data', data => log(data.toString()))
+
+    cmdProcess.on('error', (error) => {
+      vscode.window.showErrorMessage(error.message)
+    })
+
+    cmdProcess.on('exit', async (code) => {
+      log('---- trace stderr -----')
+      log(err)
+      setStatusBarState('tracing', false)
+      if (code) {
+        setStatusBarState('traceError', true)
+        vscode.window.showErrorMessage('error running trace')
+        return
+      }
+
+      setStatusBarState('traceError', false)
+      postMessage({ message: 'traceStop' })
+
+      clearTraceFiles()
+
+      await sendTraceDir(traceDir)
+    })
+  }
 }
 
 export async function sendTraceDir(traceDir: string) {
