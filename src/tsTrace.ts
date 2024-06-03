@@ -1,11 +1,20 @@
 import type { BuilderProgram, CompilerHost, CompilerOptions, CreateProgramOptions, Diagnostic, DiagnosticReporter, ExtendedConfigCacheEntry, ParseConfigFileHost, ParsedCommandLine, PrinterOptions, Program, System, Type } from 'typescript'
 import { JSDocParsingMode, NewLineKind, combinePaths, createGetCanonicalFileName, createGetSourceFile, createProgram, createWriteFileMeasuringIO, emitFilesAndReportErrorsAndGetExitStatus, findConfigFile, getConfigFileParsingDiagnostics, getDefaultLibFileName, getDirectoryPath, getParsedCommandLineOfConfigFile, maybeBind, memoize, programContainsEsModules, startTracing, sys, timestamp, tracing } from 'typescript'
+import { readTypeTimestamps, writeTypeTimestamps } from './storage'
 
 export type ExecuteCommandLineCallbacks = (program: Program | BuilderProgram | ParsedCommandLine) => void
 
 let program: Program
 export function getProgram() {
   return program
+}
+
+let typeTimestamps = new Map<number, number>()
+export async function getTypeTimestamps() {
+  if (typeTimestamps.size === 0) {
+    typeTimestamps = await readTypeTimestamps() ?? typeTimestamps
+  }
+  return typeTimestamps
 }
 
 // TODO: see src/comipler/path.ts:632
@@ -34,6 +43,8 @@ export function runLiveTrace(
       configParseResult,
       traceDir,
     )
+
+    writeTypeTimestamps(typeTimestamps)
     return program
   }
 }
@@ -142,7 +153,6 @@ function canTrace(system: System, compilerOptions: CompilerOptions) {
 }
 
 // TODO: do not call the held record type and just fetch the types by id from the program as needed
-export const typeTimestamps = new Map<number, number>()
 function enableTracing(system: System, compilerOptions: CompilerOptions, isBuildMode: boolean) {
   if (canTrace(system, compilerOptions)) {
     typeTimestamps.clear()

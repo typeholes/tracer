@@ -1,4 +1,4 @@
-import { mkdir as mkdirC, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdir as mkdirC, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative } from 'node:path'
 import { promisify } from 'node:util'
 import { env } from 'node:process'
@@ -42,7 +42,7 @@ export async function getProjectName() {
   return projectName
 }
 
-let traceFiles: Record<string, TraceData> = {}
+let traceFiles: Record<string, unknown[]> = {}
 
 export async function sendStorageMeta() {
   postMessage({ message: 'projectNames', names: projectNames })
@@ -184,12 +184,12 @@ export async function openTraceDirectoryExternal() {
 export function addTraceFile(fileName: string, contents: string) {
   try {
     const json = JSON.parse(contents)
-
-    const arr = traceData.safeParse(json)
-    if (!arr.success)
+    if (!Array.isArray(json)) {
+      vscode.window.showErrorMessage(`trace ${fileName} is not a json array`)
       return
+    }
 
-    traceFiles[fileName] = arr.data
+    traceFiles[fileName] = json
   }
   catch (e) {
     vscode.window.showErrorMessage(`${e}`)
@@ -255,4 +255,24 @@ export async function deleteTraceFiles(fileName: string, dirName?: string) {
   else if (fileName.endsWith('.json')) {
     rmSync(join(deleteDirName, fileName))
   }
+}
+
+const typeTimestampsFileName = 'timestamps.json'
+export async function writeTypeTimestamps(data: Map<number, number>) {
+  const traceDir = await getTraceDir()
+  const fileName = join(traceDir, typeTimestampsFileName)
+  writeFileSync(fileName, JSON.stringify([...data.entries()], null, 2))
+}
+
+export async function readTypeTimestamps() {
+  const traceDir = await getTraceDir()
+  const fileName = join(traceDir, typeTimestampsFileName)
+
+  if (!existsSync(fileName))
+    return undefined
+
+  const str = readFileSync(fileName).toString()
+  const json = JSON.parse(str)
+
+  return new Map<number, number>(json)
 }
