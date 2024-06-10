@@ -20,6 +20,7 @@
     "ui",
     "devUiDriver",
     "srcDev",
-    "server"
+    "server",
+    "dist",
   ]
 }

@@ -30,7 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
   log('============extension activated============')
 
   initAppState(context)
-  initClient()
+  initClient(context)
 
   updateConfig({ force: ['typescriptPathMode'] })
 

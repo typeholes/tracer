@@ -334,7 +334,7 @@
     "generate:contributes": "jiti ./scripts/generate-contributes.ts",
     "generate:experimental": "TraceExperimental=true jiti ./scripts/generate-contributes.ts",
     "pretest": "nr build && nr lint",
-    "build": "nr generate:contributes &&  nr ui:build && rollup -c",
+    "build": "nr generate:contributes &&  nr ui:build && nr server:build && rollup -c",
     "dev": "nr build --watch --sourcemap",
     "server:build": "cd server && rollup -c",
     "server:dev": "cd server && nr build --watch --sourcemap",

@@ -1,5 +1,9 @@
 import { log } from 'node:console'
+import { spawn } from 'node:child_process'
+import process from 'node:process'
+import { join } from 'node:path'
 import WebSocket from 'ws'
+import * as vscode from 'vscode'
 import * as Messages from '../../shared/src/messages'
 import type { MessageType, MessageValues } from '../../shared/src/messages'
 import { handleMessage } from '../handleMessages'
@@ -8,70 +12,91 @@ import { handleMessage } from '../handleMessages'
 
 // eslint-disable-next-line import/no-mutable-exports
 export let send = (_payload: unknown) => {}
-export function initClient() {
-  const ws = new WebSocket('ws://localhost:3010')
+export function initClient(context: vscode.ExtensionContext) {
+  const stderrChannel = vscode.window.createOutputChannel('Trace Server stdout')
+  const stdoutChannel = vscode.window.createOutputChannel('Trace Server stderr')
 
-  send = (payload: unknown) => {
-    if (ws.readyState !== ws.OPEN)
-      return
+  context.subscriptions.push(stderrChannel)
+  context.subscriptions.push(stdoutChannel)
 
-    if (typeof payload === 'string') {
-      payload = [payload]
+  const fullCmd = `node ${join(__dirname, 'dist', 'index.js')}`
+
+  log(`shell: ${process.env.SHELL}`)
+  const serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
+
+  serverProcess.stderr.on('data', data => stderrChannel.append(data.toString()))
+  serverProcess.stdout.on('data', data => stdoutChannel.append(data.toString()))
+
+  serverProcess.on('error', (error) => {
+    vscode.window.showErrorMessage(error.message)
+    process.exit(1) // this should be fun
+  })
+
+  serverProcess.on('spawn', () => {
+    const ws = new WebSocket('ws://localhost:3010')
+
+    send = (payload: unknown) => {
+      if (ws.readyState !== ws.OPEN)
+        return
+
+      if (typeof payload === 'string') {
+        payload = [payload]
+      }
+      ws.send(JSON.stringify(payload))
     }
-    ws.send(JSON.stringify(payload))
-  }
 
-  ws.on('error', console.error)
+    ws.on('error', console.error)
 
-  ws.on('open', () => {
-    send('ping')
-  })
+    ws.on('open', () => {
+      send('ping')
+    })
 
-  ws.on('pong', (data) => {
-    log('pong: %s', data)
-  })
+    ws.on('pong', (data) => {
+      log('pong: %s', data)
+    })
 
-  ws.on('message', (data: WebSocket.RawData[]) => {
-    const str = data.toString()
-    try {
-      const arr = JSON.parse(str)
-      if (Array.isArray(arr)) {
-        const id = arr[0]
-        if (typeof id !== 'number') {
-          log('invalid message')
-          log(JSON.stringify(arr, null, 2))
-          return
+    ws.on('message', (data: WebSocket.RawData[]) => {
+      const str = data.toString()
+      try {
+        const arr = JSON.parse(str)
+        if (Array.isArray(arr)) {
+          const id = arr[0]
+          if (typeof id !== 'number') {
+            log('invalid message')
+            log(JSON.stringify(arr, null, 2))
+            return
+          }
+
+          if (arr.length === 3) {
+            if (arr[1] === 'error' && typeof arr[2] === 'string') {
+              handleResponseError(id, arr[2])
+            }
+            else if (!Array.isArray(arr[1]) && typeof arr[1] == 'object' && arr[1] && (arr[2] === 'complete' || arr[2] === 'incomplete')) {
+              handleResponse(id, arr[1], arr[2] === 'complete')
+            }
+            else {
+              log(`invalid error payload ${str}`)
+            }
+            return
+          }
+
+          if (arr.length === 1) {
+            if (Array.isArray(arr[0]) || typeof arr[0] !== 'object' || !arr[0]) {
+              log(`invalid response payload ${str}`)
+              return handleMessage(arr[0])
+            }
+
+            log(`unhandled payload ${str}`)
+          }
         }
-
-        if (arr.length === 3) {
-          if (arr[1] === 'error' && typeof arr[2] === 'string') {
-            handleResponseError(id, arr[2])
-          }
-          else if (!Array.isArray(arr[1]) && typeof arr[1] == 'object' && arr[1] && (arr[2] === 'complete' || arr[2] === 'incomplete')) {
-            handleResponse(id, arr[1], arr[2] === 'complete')
-          }
-          else {
-            log(`invalid error payload ${str}`)
-          }
-          return
-        }
-
-        if (arr.length === 1) {
-          if (Array.isArray(arr[0]) || typeof arr[0] !== 'object' || !arr[0]) {
-            log(`invalid response payload ${str}`)
-            return handleMessage(arr[0])
-          }
-
+        else {
           log(`unhandled payload ${str}`)
         }
       }
-      else {
-        log(`unhandled payload ${str}`)
+      catch (_e) {
+        log(`non message payload ${str}`)
       }
-    }
-    catch (_e) {
-      log(`non message payload ${str}`)
-    }
+    })
   })
 }
 
