@@ -1,10 +1,11 @@
 /* eslint-disable no-console */
 import type WebSocket from 'ws'
+import * as Messages from '../../shared/src/messages'
 import type { Tree } from './tsTrace'
 import { runLiveTrace, tree as treeRoot } from './tsTrace'
-import * as Messages from './messages'
+// import * as Messages from './messages'
 import { sendError, sendResponse } from './server'
-import { getChildrenById, getStatsFromTree, getTypesById } from './traceMetrics'
+import { getChildrenById, getStatsFromTree, getTypesById, getTypesByTypeId } from './traceMetrics'
 
 export function receiveMessage(id: number, args: unknown, ws: WebSocket) {
   try {
@@ -31,6 +32,12 @@ export function receiveMessage(id: number, args: unknown, ws: WebSocket) {
       case 'typesById': {
         const response: Messages.TypesById = { ...parsed.data, types: getTypesById(parsed.data.id) }
         sendResponse(ws, id, response)
+        break
+      }
+
+      case 'typesByTypeId': {
+        const response: Messages.TypesByTypeId = { ...parsed.data, types: getTypesByTypeId(parsed.data.id) }
+        sendResponse(ws, id, response as any) // TODO: investigate type mismatch here
         break
       }
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { sortBy } from './src/appState'
+import { NodeDetail } from '#components'
 
 const Messages = useNuxtApp().$Messages
 
@@ -46,6 +47,11 @@ onMounted(() => {
   useNuxtApp().$initClient()
   window.addEventListener('message', handleMessage)
 })
+
+// const modal = useModal()
+// function openDetails() {
+//   modal.open(NodeDetail, {})
+// }
 </script>
 
 <template>
@@ -81,6 +87,8 @@ onMounted(() => {
 
     <dev-controls />
   </div>
+  <UModals />
+  <!-- <UButton label="open modal" @click="openDetails" /> -->
 </template>
 
 <style lang="postcss">

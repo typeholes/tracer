@@ -162,6 +162,13 @@ export const typesById = z.object({
 })
 export type TypesById = z.infer<typeof typesById>
 
+export const typesByTypeId = z.object({
+  message: z.literal('typesByTypeId'),
+  id: z.number(),
+  types: z.array(typeLine).optional(),
+})
+export type TypesByTypeId = z.infer<typeof typesByTypeId>
+
 export type Message = z.infer<typeof message>
 export const message = z.union([
   ping,
@@ -182,6 +189,7 @@ export const message = z.union([
   traceStart,
   traceStop,
   traceFileLoaded,
+  typesByTypeId,
   typesById,
   log,
 ])

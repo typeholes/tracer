@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{ label?: string, icon?: string, labelClass?: string, containerClass?: string, iconClick?: () => void }>(), {
-  containerClass: 'flex flex-col items-start text-start justify-between',
+  containerClass: 'flex flex-row items-start text-start justify-start gap-2 ',
   labelClass: '',
 })
 </script>

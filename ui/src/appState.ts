@@ -4,6 +4,7 @@ import * as Messages from '../../shared/src/messages'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
 export const typesById = shallowReactive(new Map<number, TypeLine[]>())
+export const typesByTypeId = shallowReactive(new Map<number, TypeLine[]>())
 export const nodes = ref([] as Tree[])
 export const sortBy = ref('Timestamp' as keyof typeof sortValue)
 export const projectName = ref('')
@@ -66,7 +67,14 @@ function handleMessage(e: MessageEvent<unknown>) {
       typesById.set(id, [...types, ...parsed.data.types])
       break
     }
-    case 'showTree': {
+    case 'typesByTypeId': {
+      if (!parsed.data.types)
+        return
+      const id = parsed.data.id
+      const types = typesByTypeId.get(id) ?? []
+      typesByTypeId.set(id, [...types, ...parsed.data.types])
+      break
+    } case 'showTree': {
       switch (parsed.data.step) {
         case 'start':
           nodes.value = []

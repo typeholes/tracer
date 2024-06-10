@@ -1,7 +1,7 @@
 import { isAbsolute, join } from 'node:path'
 import * as vscode from 'vscode'
 import * as Messages from '../shared/src/messages'
-import { filterTree, getChildrenById, getTypesById } from './client/actions'
+import { filterTree, getChildrenById, getTypesById, getTypesByTypeId } from './client/actions'
 import { log } from './logger'
 import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
@@ -49,6 +49,10 @@ export function handleMessage(message: unknown): void {
     }
     case 'typesById': {
       getTypesById(data.id)
+      break
+    }
+    case 'typesByTypeId': {
+      getTypesByTypeId(data.id)
       break
     }
 

@@ -4,7 +4,7 @@ export type TypeLine = z.infer<typeof typeLine>
 export const typeLine = z.object({
   id: z.number(),
   intrinsicName: z.string().optional(),
-  recursionId: z.number().optional(),
+  recursionRelatedTypeIds: z.tuple([z.number(), z.array(z.number())]).optional(),
   flags: z.array(z.string()).optional(),
   ts: z.number().default(0).optional(),
   dur: z.number().optional(),

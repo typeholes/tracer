@@ -10,4 +10,5 @@ export interface Tree {
   maxDepth: number
   childTypeCnt: number
   typeCnt: number
+  typeRecursionId?: number
 }

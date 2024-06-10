@@ -17,7 +17,7 @@ const props = defineProps<{ line: TypeLine }>()
         id: {{ line.id }}
       </div>
       <div class="col-1">
-        {{ line.recursionId }}
+        {{ line.recursionRelatedTypeIds }}
       </div>
       <div class="col-8">
         {{ line.flags }}

@@ -2,6 +2,7 @@
 import type { Tree } from '../../shared/src/tree'
 import { projectPath, shiftHeld } from '../src/appState'
 import { childrenById, doSort, typesById } from '~/src/appState'
+import { NodeDetail } from '#components'
 
 const props = defineProps<{ tree: Tree, depth: number, forceExpand: boolean }>()
 
@@ -71,6 +72,11 @@ function shortenPath(fileName: string | undefined) {
 
   return fileName
 }
+
+const modal = useModal()
+function openTypeDetails() {
+  modal.open(NodeDetail, { node: props.tree })
+}
 </script>
 
 <template>
@@ -89,6 +95,10 @@ function shortenPath(fileName: string | undefined) {
               {{ tree.line.name }} ({{ tree.maxDepth }}):
             </span><span>
               {{ Math.round(props.tree.line.dur ?? 0) }}ms
+              <button class="mr-2 pb-1 mb-1 bg-[var(--vscode-button-background, green)] rounded-sm focus:ring-[var(--vscode-focusBorder, blue)] focus:outline-none focus:ring-1 " @click="openTypeDetails">
+                <UIcon primary name="i-heroicons-information-circle" class="relative top-1  hover:backdrop-invert-[10%] hover:invert-[20%] bg-[var(--vscode-button-foreground, white)] " />
+              </button>
+
             </span>
             <div class="grow opacity-20 hover:opacity-100 h-full">
               <div class="mt-4 border-b border-dashed border-[var(--vscode-tree-indentGuidesStroke)]" />

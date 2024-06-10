@@ -16,8 +16,12 @@ export function getChildrenById(id: number) {
   return ret
 }
 
-export function getTypesById(id: number) {
-  const ids = treeIdNodes.get(id)?.typeIds
+export function getTypesByTypeId(id: number) {
+  return getTypesById(0, [id])
+}
+
+export function getTypesById(id: number, typeIds?: number[]) {
+  const ids = typeIds ?? treeIdNodes.get(id)?.typeIds
   const typeDictionary = getTypeDictionary()
   if (!ids)
     return []

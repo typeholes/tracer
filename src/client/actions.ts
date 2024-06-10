@@ -69,3 +69,13 @@ export function getTypesById(id: number) {
     },
   )
 }
+
+export function getTypesByTypeId(id: number) {
+  wsMessage('typesByTypeId', { id }) (
+    'typesByTypeId',
+    postMessage,
+    (error: string) => {
+      vscode.window.showErrorMessage(error)
+    },
+  )
+}

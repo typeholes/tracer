@@ -73,6 +73,7 @@ export const treeIdNodes = new Map<number, Tree>()
 
 let lastTreeId = 0
 const typeDictionary = new Map<number, Type>()
+const typeIdDictionary = new Map<Type, number>()
 function mkTreeRoot(): Tree {
   const tree: Tree = {
     id: 0,
@@ -89,6 +90,7 @@ function mkTreeRoot(): Tree {
   treeIdNodes.clear()
   treeIdNodes.set(0, tree)
   typeDictionary.clear()
+  typeIdDictionary.clear()
   lastTreeId = 1
 
   return tree
@@ -307,6 +309,7 @@ function enableTracing(
         if (typeDictionary.size === 0)
           holdRecordType(type) // need one or ts crashes
         typeDictionary.set(type.id, type)
+        typeIdDictionary.set(type, type.id)
         tree.typeCnt = tree.typeIds.push(type.id)
       }
 
@@ -379,8 +382,6 @@ function enableTracing(
     }
   }
 }
-
-// TODO: we may want to make this on demand, or only populate commonly used properties eagerly
 
 const recursionIdentityMap = new Map<object, number>()
 function addLocation(args: Record<string, any> | undefined) {
