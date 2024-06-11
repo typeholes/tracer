@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { sortBy } from './src/appState'
-import { NodeDetail } from '#components'
 
 const Messages = useNuxtApp().$Messages
 
