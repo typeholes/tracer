@@ -19,7 +19,7 @@ export function initClient(context: vscode.ExtensionContext) {
   context.subscriptions.push(stderrChannel)
   context.subscriptions.push(stdoutChannel)
 
-  const fullCmd = `node ${join(__dirname, 'dist', 'index.js')}`
+  const fullCmd = `node ${join(__dirname, 'server', 'index.js')}`
 
   log(`shell: ${process.env.SHELL}`)
   const serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
@@ -135,7 +135,7 @@ function handleResponse(handlerIdx: number, message: object, complete: boolean) 
     return
   }
 
-  handler(parsed.data, complete)
+  handler(message as any, complete)
 }
 
 function handleResponseError(handlerIdx: number, message: string) {

@@ -10,7 +10,7 @@ export function getChildrenById(id: number) {
   const nodes = treeIdNodes.get(id)?.children ?? []
   const ret: typeof nodes = []
   nodes.forEach((node) => {
-    treeIdNodes.set(node.id, node)
+    // treeIdNodes.set(node.id, node)
     ret.push({ ...node, children: [], typeIds: [] })
   })
   return ret

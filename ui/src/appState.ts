@@ -54,7 +54,7 @@ function handleMessage(e: MessageEvent<unknown>) {
         return
       const id = parsed.data.id
       const children = childrenById.get(id) ?? []
-      childrenById.set(id, [...children, ...parsed.data.children])
+      childrenById.set(id, [...children, ...(e.data as any).children])
       // eslint-disable-next-line no-console
       console.log('received children by id', id, children.length)
       break

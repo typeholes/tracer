@@ -21,6 +21,6 @@
     "devUiDriver",
     "srcDev",
     "server",
-    "dist",
+    "dist"
   ]
 }

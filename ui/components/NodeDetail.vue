@@ -58,7 +58,7 @@ const node: Tree = {
           {{ node.childTypeCnt }}
         </ULabled>
       </div>
-      <template v-for="ar, arIdx in ['args', 'result']" :key="arIdx">
+      <template v-for="ar, arIdx in ['args', 'results']" :key="arIdx">
         <span> {{ ar }} </span>
         <div v-for="(value, idx) in node.line[ar as never] ?? {}" :key="idx" class="flex flex-row pl-4">
           <div v-if="typeof value === 'object'" class="flex flex-col pl-4">
@@ -82,7 +82,7 @@ const node: Tree = {
       </template>
 
       <div style="white-space: pre;">
-        {{ JSON.stringify(node, null, 2) }}
+        {{ JSON.stringify(node.line.args, null, 2) }}
       </div>
     </div>
   </umodal>

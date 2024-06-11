@@ -23,10 +23,10 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/server/dist/index.js",
+      "program": "${workspaceFolder}/dist/server/index.js",
       "preLaunchTask": "npm: server:dev",
       "outFiles": [
-        "${workspaceFolder}/server/dist/**/*.js"
+        "${workspaceFolder}/dist/server/**/*.js"
       ]
     }
   ],

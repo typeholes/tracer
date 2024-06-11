@@ -63,7 +63,7 @@ export function getChildrenById(id: number) {
 export function getTypesById(id: number) {
   wsMessage('typesById', { id }) (
     'typesById',
-    postMessage,
+    message => postMessage(message),
     (error: string) => {
       vscode.window.showErrorMessage(error)
     },
@@ -73,7 +73,7 @@ export function getTypesById(id: number) {
 export function getTypesByTypeId(id: number) {
   wsMessage('typesByTypeId', { id }) (
     'typesByTypeId',
-    postMessage,
+    x => postMessage(x),
     (error: string) => {
       vscode.window.showErrorMessage(error)
     },

@@ -9,7 +9,7 @@ export const typeLine = z.object({
   ts: z.number().default(0).optional(),
   dur: z.number().optional(),
   display: z.string().optional(),
-})
+}).passthrough()
 
 export type TraceLine = z.infer<typeof traceLine>
 export const traceLine = z.object({
@@ -28,17 +28,16 @@ export const traceLine = z.object({
       location: z.object({
         line: z.number(),
         character: z.number(),
-      }).optional(),
+      }).passthrough().optional(),
       path: z.string().optional(),
       results: z
         .object({
           typeId: z.number().optional(),
-        })
-        .optional(),
+        }).passthrough().optional(),
     })
     .optional(),
   results: z.object({}).optional(),
-})
+}).passthrough()
 
 export type DataLine = TraceLine | TypeLine
 
