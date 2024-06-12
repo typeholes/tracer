@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Value } from '@sinclair/typebox/value'
 import { sortBy } from './src/appState'
 
 const Messages = useNuxtApp().$Messages
@@ -22,15 +23,14 @@ function setPosition(event: any) {
 }
 
 function handleMessage(e: MessageEvent<unknown>) {
-  const message = Messages.message.safeParse(e.data)
-  if (!message.success)
+  if (!Value.Check(Messages.message, e.data))
     return
 
-  if (message.data.message === 'gotoTracePosition')
-    filters.value = { startsWith: '', position: message.data.position, sourceFileName: message.data.fileName }
+  if (e.data.message === 'gotoTracePosition')
+    filters.value = { startsWith: '', position: e.data.position, sourceFileName: e.data.fileName }
 
-  else if (message.data.message === 'filterTree')
-    filters.value = message.data
+  else if (e.data.message === 'filterTree')
+    filters.value = e.data
 }
 
 function updateSort(event: any) {

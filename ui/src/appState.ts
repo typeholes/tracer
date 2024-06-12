@@ -1,6 +1,6 @@
-import type { TypeLine } from '../../shared/src/traceData'
-import type { Tree } from '../../shared/src/tree'
-import * as Messages from '../../shared/src/messages'
+import { Value } from '@sinclair/typebox/value'
+import type { Tree, TypeLine } from '../../shared/src/typebox'
+import * as Messages from '../../shared/src/typebox'
 
 export const childrenById = shallowReactive(new Map<number, Tree[]>())
 export const typesById = shallowReactive(new Map<number, TypeLine[]>())
@@ -44,15 +44,14 @@ export function doSort(arr: Tree[]) {
 watch(sortBy, () => nodes.value = doSort(nodes.value ?? []))
 
 function handleMessage(e: MessageEvent<unknown>) {
-  const parsed = Messages.message.safeParse(e.data)
-  if (!parsed.success)
+  if (!Value.Check(Messages.message, e.data))
     return
 
-  switch (parsed.data.message) {
+  switch (e.data.message) {
     case 'childrenById': {
-      if (!parsed.data.children)
+      if (!e.data.children)
         return
-      const id = parsed.data.id
+      const id = e.data.id
       const children = childrenById.get(id) ?? []
       childrenById.set(id, [...children, ...(e.data as any).children])
       // eslint-disable-next-line no-console
@@ -60,27 +59,27 @@ function handleMessage(e: MessageEvent<unknown>) {
       break
     }
     case 'typesById': {
-      if (!parsed.data.types)
+      if (!e.data.types)
         return
-      const id = parsed.data.id
+      const id = e.data.id
       const types = typesById.get(id) ?? []
-      typesById.set(id, [...types, ...parsed.data.types])
+      typesById.set(id, [...types, ...e.data.types])
       break
     }
     case 'typesByTypeId': {
-      if (!parsed.data.types)
+      if (!e.data.types)
         return
-      const id = parsed.data.id
+      const id = e.data.id
       const types = typesByTypeId.get(id) ?? []
-      typesByTypeId.set(id, [...types, ...parsed.data.types])
+      typesByTypeId.set(id, [...types, ...e.data.types])
       break
     } case 'showTree': {
-      switch (parsed.data.step) {
+      switch (e.data.step) {
         case 'start':
           nodes.value = []
           break
         case 'add':
-          nodes.value = doSort([...nodes.value, ...parsed.data.nodes])
+          nodes.value = doSort([...nodes.value, ...e.data.nodes])
           break
         case 'done':
           break
@@ -88,36 +87,36 @@ function handleMessage(e: MessageEvent<unknown>) {
       break
     }
     case 'projectNames':
-      projectNames.value = parsed.data.names
+      projectNames.value = e.data.names
       break
 
     case 'saveNames':
-      saveNames.value = parsed.data.names
+      saveNames.value = e.data.names
       break
 
     case 'saveOpen': {
-      saveName.value = parsed.data.name
+      saveName.value = e.data.name
       break
     }
 
     case 'projectOpen': {
-      projectName.value = parsed.data.name
+      projectName.value = e.data.name
       break
     }
 
     case 'traceFileLoaded': {
-      const data = parsed.data
+      const data = e.data
       if (data.resetFileList) {
         files.value = []
         nodes.value = []
       }
-      if (parsed.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
-        files.value.push(parsed.data)
+      if (e.data.fileName && !files.value.some(x => x.fileName === data.fileName && x.dirName === data.dirName))
+        files.value.push(e.data)
       break
     }
 
     case 'traceStart': {
-      projectPath.value = parsed.data.projectPath
+      projectPath.value = e.data.projectPath
       traceRunning.value = true
       break
     }

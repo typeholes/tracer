@@ -1,9 +1,9 @@
 import { isAbsolute, join } from 'node:path'
 import * as vscode from 'vscode'
-import * as Messages from '../shared/src/messages'
+import { Value } from '@sinclair/typebox/value'
+import * as Messages from '../shared/src/typebox'
 import { filterTree, getChildrenById, getTypesById, getTypesByTypeId } from './client/actions'
 import { log } from './logger'
-import { postMessage } from './webview'
 import { deleteTraceFiles, setLastMessageTrigger } from './storage'
 import { state, triggerAll } from './appState'
 
@@ -15,19 +15,13 @@ export function handleMessage(message: unknown): void {
   }
 
   setLastMessageTrigger(message)
-  const parsed = Messages.message.safeParse(message)
-  if (!parsed.success) {
+  if (!Value.Check(Messages.message, message)) {
     vscode.window.showWarningMessage(`Unknown message ${JSON.stringify(message).slice(0, 20)}`)
     return
   }
 
-  const data = parsed.data
+  const data = message
   switch (data.message) {
-    case 'ping':
-      vscode.window.showInformationMessage('Pinged from webview')
-      postMessage({ message: 'pong' })
-      break
-    case 'pong': break
     case 'gotoLocation': break
     case 'gotoPosition':
       gotoPosition(data.fileName, data.pos)

@@ -355,6 +355,7 @@
     "release": "bumpp && git push"
   },
   "dependencies": {
+    "@sinclair/typebox": "^0.32.31",
     "@vue/reactivity": "^3.4.27",
     "ws": "^8.17.0"
   },

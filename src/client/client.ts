@@ -5,8 +5,9 @@ import process from 'node:process'
 import { join } from 'node:path'
 import WebSocket from 'ws'
 import * as vscode from 'vscode'
-import * as Messages from '../../shared/src/messages'
-import type { MessageType, MessageValues } from '../../shared/src/messages'
+import { Value } from '@sinclair/typebox/value'
+import * as Messages from '../../shared/src/typebox'
+import type { MessageType, MessageValues } from '../../shared/src/typebox'
 import { handleMessage } from '../handleMessages'
 import { getCurrentConfig } from '../configuration'
 
@@ -28,7 +29,7 @@ export function initClient(context: vscode.ExtensionContext) {
 
   const port = getCurrentConfig().traceServerPort
 
-  const fullCmd = `node ${join(__dirname, 'server', 'index.js')} ${port}`
+  const fullCmd = `node ${join(__dirname, 'server', 'index.js')} ${port} --inspect=9299`
 
   log(`shell: ${process.env.SHELL}`)
   serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
@@ -136,11 +137,12 @@ function handleResponse(handlerIdx: number, message: object, complete: boolean) 
   if (complete)
     responseHandlers[handlerIdx] = undefined
 
-  const parsed = Messages.message.safeParse(message)
-  if (!parsed.success) {
+  if (!Value.Check(Messages.message, message)) {
     log('response payload was not a message object')
     return
   }
+
+  const parsed = { data: message }
 
   if (expectedType !== parsed.data.message) {
     log(`response type ${parsed.data.message} did not match expected type ${expectedType}`)

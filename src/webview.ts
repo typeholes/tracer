@@ -7,7 +7,7 @@ import * as vscode from 'vscode'
 // @ts-ignore raw loader
 // eslint-disable-next-line antfu/no-import-dist
 import html from '../ui/dist/200.html?raw'
-import type { Message } from '../shared/src/messages'
+import type { Message } from '../shared/src/typebox'
 import { noop, watchT } from './appState'
 import { handleMessage } from './handleMessages'
 import { logMessage } from './storage'

@@ -2,8 +2,8 @@
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 
-import type * as Messages from '../../shared/src/messages'
-import { receiveMessage } from './receiveMessage'
+import type * as Messages from '../../shared/src/typebox'
+import { receiveMessage } from './receiveMessage.tb'
 
 export function init(port: number) {
   const wss = new WebSocketServer({ port })

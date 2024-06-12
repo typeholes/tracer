@@ -1,4 +1,4 @@
-import type { TraceLine } from './traceData'
+import type { TraceLine } from './typebox'
 
 export interface Tree {
   id: number

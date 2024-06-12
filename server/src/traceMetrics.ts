@@ -1,8 +1,8 @@
 import { join } from 'node:path'
-import type { FileStat } from '../../shared/src/messages'
+import type { MessageValues } from '../../shared/src/typebox'
 import { workspacePath } from './serverState'
 import { type Tree, getProgram, getTypeDictionary, treeIdNodes, typeToDescriptor } from './tsTrace'
-import { filterTree } from './receiveMessage'
+import { filterTree } from './receiveMessage.tb'
 
 export const processedFiles = new Set<string>()
 
@@ -47,6 +47,8 @@ export function getTypesById(id: number, typeIds?: number[]) {
   }
   return ret
 }
+
+type FileStat = MessageValues<'fileStats'>['stats'][0]
 
 export function getStatsFromTree(fileName: string) {
   const stats: FileStat[] = []

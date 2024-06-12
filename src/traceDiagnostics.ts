@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import type { FileStat } from '../shared/src/messages'
+import type { SpecificMessage } from '../shared/src/typebox'
 import { afterConfigUpdate, getCurrentConfig } from './configuration'
 import { getFileStats } from './client/actions'
 
@@ -33,6 +33,8 @@ const averageThresholds = {
   types: 0,
   totalTypes: 0,
 }
+
+type FileStat = SpecificMessage<'fileStats'>['stats'][0]
 
 export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   if (!getCurrentConfig().enableTraceMetrics)
