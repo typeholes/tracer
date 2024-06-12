@@ -22,6 +22,7 @@ const currentConfig = {
   enableRealtimeMetrics: true,
   fileBrowserExecutable: '',
   maxDiagnosticsPerFile: 20,
+  traceServerPort: 3010,
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
@@ -69,6 +70,7 @@ const configValidate = {
   enableRealtimeMetrics: isBoolean,
   fileBrowserExecutable: isString,
   maxDiagnosticsPerFile: isNumber,
+  traceServerPort: isNumber,
 } satisfies Record<ConfigKey, any>
 
 function noop() {
@@ -92,6 +94,7 @@ const configHandlers = {
   enableRealtimeMetrics: noop,
   fileBrowserExecutable: noop,
   maxDiagnosticsPerFile: noop,
+  traceServerPort: noop,
 } satisfies Record<ConfigKey, any>
 
 let configuration = vscode.workspace.getConfiguration(extPrefix)
@@ -126,6 +129,7 @@ vscode.workspace.onDidChangeConfiguration((change) => {
     updateConfig()
   }
 })
+updateConfig()
 
 export function afterConfigUpdate(keys: ConfigKey[], handler: (config: typeof currentConfig) => void) {
   afterConfigHandlers.push([keys, handler])

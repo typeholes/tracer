@@ -5,6 +5,7 @@
 // import * as dbSchema from './dbSchema';
 // import { loadTrace } from './traceDir';
 // import { printTree, runLiveTrace } from './tsTrace';
+import { argv } from 'node:process'
 import * as server from './server'
 
 async function main() {
@@ -22,7 +23,15 @@ async function main() {
 
   // runLiveTrace('/home/hw/projects/tracer/playground', '/tmp/tsTrace');
   // printTree();
-  server.init()
+
+  const portStr = argv[2]
+  const port = Number.parseInt(portStr)
+
+  if (`${port}` !== portStr) {
+    throw new Error(`Invalid port argument: ${portStr}`)
+  }
+
+  server.init(port)
 }
 
 main()

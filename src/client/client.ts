@@ -1,4 +1,5 @@
 import { log } from 'node:console'
+import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import { spawn } from 'node:child_process'
 import process from 'node:process'
 import { join } from 'node:path'
@@ -7,20 +8,30 @@ import * as vscode from 'vscode'
 import * as Messages from '../../shared/src/messages'
 import type { MessageType, MessageValues } from '../../shared/src/messages'
 import { handleMessage } from '../handleMessages'
+import { getCurrentConfig } from '../configuration'
 
 // TODO: auto reconnect
 
 // eslint-disable-next-line import/no-mutable-exports
 export let send = (_payload: unknown) => {}
+let serverProcess: ChildProcessWithoutNullStreams
+
+export function stopTracerServer() {
+  if (serverProcess)
+    serverProcess.kill()
+}
+
 export function initClient(context: vscode.ExtensionContext) {
   const serverOutputChannel = vscode.window.createOutputChannel('Trace Server stderr')
 
   context.subscriptions.push(serverOutputChannel)
 
-  const fullCmd = `node ${join(__dirname, 'server', 'index.js')}`
+  const port = getCurrentConfig().traceServerPort
+
+  const fullCmd = `node ${join(__dirname, 'server', 'index.js')} ${port}`
 
   log(`shell: ${process.env.SHELL}`)
-  const serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
+  serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
 
   serverProcess.stderr.on('data', (data) => {
     const str = data.toString()
@@ -34,7 +45,7 @@ export function initClient(context: vscode.ExtensionContext) {
   })
 
   serverProcess.on('spawn', () => {
-    const ws = new WebSocket('ws://localhost:3010')
+    const ws = new WebSocket(`ws://localhost:${port}`)
 
     send = (payload: unknown) => {
       if (ws.readyState !== ws.OPEN)

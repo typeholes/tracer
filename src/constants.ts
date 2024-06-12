@@ -18,6 +18,7 @@ export const configKeys = [
   'enableRealtimeMetrics',
   'fileBrowserExecutable',
   'maxDiagnosticsPerFile',
+  'traceServerPort',
 ] as const
 
 export type ConfigKey = typeof configKeys[number]

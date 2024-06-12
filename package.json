@@ -276,6 +276,12 @@
           },
           "description": "todo",
           "order": 16
+        },
+        "tsperf.tracer.traceServerPort": {
+          "type": "number",
+          "default": 3010,
+          "description": "port that the tracer server will listen on",
+          "order": 17
         }
       }
     },

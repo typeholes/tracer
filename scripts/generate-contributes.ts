@@ -209,6 +209,13 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
   {
     'tsperf.tracer.traceTotalTypeRelativeThresholds': threshold(),
   },
+  {
+    'tsperf.tracer.traceServerPort': {
+      type: 'number',
+      default: 3010,
+      description: 'port that the tracer server will listen on',
+    },
+  },
 ]
 
 const configurationProperties = orderedConfigurationProperties

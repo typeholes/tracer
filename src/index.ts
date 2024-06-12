@@ -15,7 +15,7 @@ import { getRelativeSeverity, getSeverity, initDiagnostics } from './traceDiagno
 import { initWebviewPanel } from './webview'
 import { initStatusBar } from './statusBar'
 import { initAppState, metricsRunning } from './appState'
-import { initClient } from './client/client'
+import { initClient, stopTracerServer } from './client/client'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -65,7 +65,9 @@ export async function activate(context: vscode.ExtensionContext) {
   initDiagnostics(context)
 }
 
-export function deactivate() {}
+export function deactivate() {
+  stopTracerServer()
+}
 
 // Large portions of the following code have been taken from
 // https://github.com/microsoft/DefinitelyTyped-tools/blob/41ba894ba571e55fa91ef0bb0d44d6eb6d201943/packages/perf
