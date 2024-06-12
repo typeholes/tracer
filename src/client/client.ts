@@ -13,23 +13,24 @@ import { handleMessage } from '../handleMessages'
 // eslint-disable-next-line import/no-mutable-exports
 export let send = (_payload: unknown) => {}
 export function initClient(context: vscode.ExtensionContext) {
-  const stderrChannel = vscode.window.createOutputChannel('Trace Server stdout')
-  const stdoutChannel = vscode.window.createOutputChannel('Trace Server stderr')
+  const serverOutputChannel = vscode.window.createOutputChannel('Trace Server stderr')
 
-  context.subscriptions.push(stderrChannel)
-  context.subscriptions.push(stdoutChannel)
+  context.subscriptions.push(serverOutputChannel)
 
   const fullCmd = `node ${join(__dirname, 'server', 'index.js')}`
 
   log(`shell: ${process.env.SHELL}`)
   const serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
 
-  serverProcess.stderr.on('data', data => stderrChannel.append(data.toString()))
-  serverProcess.stdout.on('data', data => stdoutChannel.append(data.toString()))
+  serverProcess.stderr.on('data', (data) => {
+    const str = data.toString()
+    serverOutputChannel.append(str)
+    vscode.window.showErrorMessage(str)
+  })
+  serverProcess.stdout.on('data', data => serverOutputChannel.append(data.toString()))
 
   serverProcess.on('error', (error) => {
     vscode.window.showErrorMessage(error.message)
-    process.exit(1) // this should be fun
   })
 
   serverProcess.on('spawn', () => {
