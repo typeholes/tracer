@@ -2,7 +2,7 @@
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 
-import type * as Messages from './messages'
+import type * as Messages from '../../shared/src/messages'
 import { receiveMessage } from './receiveMessage'
 
 export function init(port: number) {
