@@ -373,7 +373,7 @@ function enableTracing(
         }
         const parent = treeIdNodes.get(tree.parentId)!
         parent.maxDepth = Math.max(parent.maxDepth, tree.maxDepth + 1)
-        parent.childTypeCnt += tree.typeCnt
+        parent.childTypeCnt += tree.typeCnt + tree.childTypeCnt
         tree = parent
         tree.line.results = results ?? {}
         tree.line.dur = performance.now() - tree.line.ts
