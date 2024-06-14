@@ -5,6 +5,6 @@ import { nodes } from '../src/appState'
 
 <template>
   <template v-for="tree of nodes" :key="tree.id">
-    <TreeNode :tree="tree" :depth="0" :is-in-check="false" />
+    <TreeNode :tree="tree" :depth="0" :is-in-check="false" :force-expand="false" />
   </template>
 </template>

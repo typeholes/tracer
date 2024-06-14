@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TypeLine } from '../../shared/src/traceData'
+import type { TypeLine } from '../../shared/src/typebox'
 
 const props = defineProps<{ line: TypeLine }>()
 </script>

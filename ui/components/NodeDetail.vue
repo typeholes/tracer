@@ -79,7 +79,7 @@ const node: Tree = {
         <div v-if="typeof value === 'object'" class="flex flex-col pl-4">
           <template v-for="(childValue, childIdx) in node.line.args?.[idx] ?? {}" :key="childIdx">
             <ULabled :label="`${childIdx}:`" class="">
-              <TypeDetail v-if="typeof childValue === 'number' && ['sourceId', 'targetId', 'id', 'Id'].includes(childIdx)" :id="childValue" />
+              <TypeIdDetail v-if="typeof childValue === 'number' && ['sourceId', 'targetId', 'id', 'Id'].includes(childIdx)" :id="childValue" :ancestors="[]" :depth="0" />
               <span v-else>
                 {{ childValue }}
               </span>
@@ -88,7 +88,7 @@ const node: Tree = {
         </div>
 
         <ULabled v-else :label="`${idx}:`" class="">
-          <TypeDetail v-if="typeof value === 'number' && ['sourceId', 'targetId', 'id', 'Id'].includes(idx)" :id="value" />
+          <TypeIdDetail v-if="typeof value === 'number' && ['sourceId', 'targetId', 'id', 'Id'].includes(idx)" :id="value" :ancestors="[]" :depth="0" />
           <span v-else>
             {{ value }}
           </span>
