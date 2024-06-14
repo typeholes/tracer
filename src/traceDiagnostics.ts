@@ -11,12 +11,6 @@ export function initDiagnostics(ctx: vscode.ExtensionContext): void {
   ctx.subscriptions.push(diagnosticCollection)
 }
 
-const fileStatus = new Map<string, 'dirty' | 'clean'>()
-
-vscode.workspace.onDidChangeTextDocument((event) => {
-  fileStatus.set(event.document.fileName, 'dirty')
-})
-
 vscode.window.onDidChangeActiveTextEditor((event) => {
   const fileName = event?.document?.fileName
   if (fileName)
@@ -24,7 +18,6 @@ vscode.window.onDidChangeActiveTextEditor((event) => {
 })
 
 export function clearTaceDiagnostics() {
-  fileStatus.clear()
   if (diagnosticCollection)
     diagnosticCollection.clear()
 }
@@ -43,12 +36,6 @@ export async function addTraceDiagnostics(fileName: string, stats: FileStat[]) {
   const relative = getCurrentConfig().traceDiagnosticsRelative
 
   const uri = vscode.Uri.file(fileName)
-  if (fileStatus.get(fileName) === 'dirty') {
-    diagnosticCollection.set(uri, [])
-    return
-  }
-
-  fileStatus.set(fileName, 'clean')
 
   const document = await vscode.workspace.openTextDocument(uri)
 
