@@ -1,10 +1,10 @@
-import { log } from 'node:console'
 import * as vscode from 'vscode'
 import { state, traceRunning } from '../appState'
 import { setStatusBarState } from '../statusBar'
 import type { Tree } from '../../shared/src/tree'
 import { postMessage } from '../webview'
 import { addTraceDiagnostics } from '../traceDiagnostics'
+import { log } from '../logger'
 import { wsMessage } from './client'
 
 export function runTrace(projectPath: string, traceDir: string) {

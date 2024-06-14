@@ -1,4 +1,3 @@
-import { log } from 'node:console'
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 import { spawn } from 'node:child_process'
 import process from 'node:process'
@@ -6,10 +5,12 @@ import { join } from 'node:path'
 import WebSocket from 'ws'
 import * as vscode from 'vscode'
 import { Value } from '@sinclair/typebox/value'
+import { i } from 'vitest/dist/reporters-yx5ZTtEV'
 import * as Messages from '../../shared/src/typebox'
 import type { MessageType, MessageValues } from '../../shared/src/typebox'
 import { handleMessage } from '../handleMessages'
 import { getCurrentConfig } from '../configuration'
+import { log } from '../logger'
 
 // TODO: auto reconnect
 
@@ -31,8 +32,10 @@ export function initClient(context: vscode.ExtensionContext) {
 
   const fullCmd = `node ${join(__dirname, 'server', 'index.js')} ${port} --inspect=9299`
 
-  log(`shell: ${process.env.SHELL}`)
-  serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell: process.env.SHELL })
+  const shell = process.env.SHELL ?? vscode.env.shell
+
+  log(`shell: ${shell}`)
+  serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell })
 
   serverProcess.stderr.on('data', (data) => {
     const str = data.toString()
