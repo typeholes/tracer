@@ -212,8 +212,8 @@ const orderedConfigurationProperties: Partial<Record<PropertyConfigKey, Record<s
   {
     'tsperf.tracer.traceServerPort': {
       type: 'number',
-      default: 3010,
-      description: 'port that the tracer server will listen on',
+      default: 0,
+      description: 'port that the tracer server will listen on. 0 = random port',
     },
   },
 ]

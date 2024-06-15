@@ -22,7 +22,7 @@ const currentConfig = {
   enableRealtimeMetrics: true,
   fileBrowserExecutable: '',
   maxDiagnosticsPerFile: 20,
-  traceServerPort: 3010,
+  traceServerPort: 0,
 } satisfies Record<ConfigKey, any>
 
 export function getCurrentConfig() {
