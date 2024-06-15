@@ -23,8 +23,8 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/dist/server/index.js",
-      "args": ["3010"],
+      "program": "${workspaceFolder}/dist/server/tracerServer.js",
+      "args": ["0"],
       "preLaunchTask": "npm: server:dev",
       "outFiles": [
         "${workspaceFolder}/dist/server/**/*.js"

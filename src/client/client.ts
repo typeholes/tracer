@@ -1,11 +1,11 @@
-import type { ChildProcessWithoutNullStreams } from 'node:child_process'
-import { spawn } from 'node:child_process'
+import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_process'
+import { fork, spawn } from 'node:child_process'
 import process from 'node:process'
 import { join } from 'node:path'
+import * as http from 'node:http'
 import WebSocket from 'ws'
 import * as vscode from 'vscode'
 import { Value } from '@sinclair/typebox/value'
-import { i } from 'vitest/dist/reporters-yx5ZTtEV'
 import * as Messages from '../../shared/src/typebox'
 import type { MessageType, MessageValues } from '../../shared/src/typebox'
 import { handleMessage } from '../handleMessages'
@@ -16,9 +16,10 @@ import { log } from '../logger'
 
 // eslint-disable-next-line import/no-mutable-exports
 export let send = (_payload: unknown) => {}
-let serverProcess: ChildProcessWithoutNullStreams
+let serverProcess: ChildProcess
 
 export function stopTracerServer() {
+  send('exit')
   if (serverProcess)
     serverProcess.kill()
 }
@@ -28,91 +29,109 @@ export function initClient(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(serverOutputChannel)
 
-  const port = getCurrentConfig().traceServerPort
+  let port = getCurrentConfig().traceServerPort
+  if (port < 1) {
+    log('getting random port')
+    const server = http.createServer(() => {}).listen(0)
+    const address = server.address()
+    server.close()
+    if (address && typeof address === 'object' && 'port' in address) {
+      port = address.port
+    }
+    else {
+      log('could not get random ort')
+    }
+  }
 
-  const fullCmd = `node ${join(__dirname, 'server', 'index.js')} ${port} --inspect=9299`
+  const fullCmd = `${join(__dirname, 'server', 'tracerServer.js')}`
 
-  const shell = process.env.SHELL ?? vscode.env.shell
+  const shell = process.env.SHELL ?? vscode.env.shell ?? vscode.env.shell ?? (vscode.env as any).ComSpec ?? 'cmd.exe'
 
   log(`shell: ${shell}`)
-  serverProcess = spawn(fullCmd, [], { cwd: __dirname, shell })
+  serverProcess = fork(fullCmd, [`${port}`], { cwd: __dirname })
 
-  serverProcess.stderr.on('data', (data) => {
+  serverProcess.stderr?.on('data', (data) => {
     const str = data.toString()
     serverOutputChannel.append(str)
     vscode.window.showErrorMessage(str)
   })
-  serverProcess.stdout.on('data', data => serverOutputChannel.append(data.toString()))
+  serverProcess.stdout?.on('data', data => serverOutputChannel.append(data.toString()))
 
   serverProcess.on('error', (error) => {
     vscode.window.showErrorMessage(error.message)
   })
 
+  send = (payload: unknown) => {
+    serverProcess.send(payload as any)
+  }
+
   serverProcess.on('spawn', () => {
-    const ws = new WebSocket(`ws://localhost:${port}`)
+    setTimeout(() => {
+      const ws = new WebSocket(`ws://localhost:${port}`)
 
-    send = (payload: unknown) => {
-      if (ws.readyState !== ws.OPEN)
-        return
+      // send = (payload: unknown) => {
+      //   if (ws.readyState !== ws.OPEN)
+      //     return
 
-      if (typeof payload === 'string') {
-        payload = [payload]
-      }
-      ws.send(JSON.stringify(payload))
-    }
+      //   if (typeof payload === 'string') {
+      //     payload = [payload]
+      //   }
+      //   ws.send(JSON.stringify(payload))
+      // }
 
-    ws.on('error', console.error)
+      ws.on('error', console.error)
 
-    ws.on('open', () => {
-      send('ping')
-    })
+      ws.on('open', () => {
+        send('ping')
+      })
 
-    ws.on('pong', (data) => {
-      log('pong: %s', data)
-    })
+      ws.on('pong', (data) => {
+        log('pong: %s', data)
+      })
 
-    ws.on('message', (data: WebSocket.RawData[]) => {
-      const str = data.toString()
-      try {
-        const arr = JSON.parse(str)
-        if (Array.isArray(arr)) {
-          const id = arr[0]
-          if (typeof id !== 'number') {
-            log('invalid message')
-            log(JSON.stringify(arr, null, 2))
-            return
+      ws.on('message', (data: WebSocket.RawData[]) => {
+        const str = data.toString()
+        try {
+          const arr = JSON.parse(str)
+          if (Array.isArray(arr)) {
+            const id = arr[0]
+            if (typeof id !== 'number') {
+              log('invalid message')
+              log(JSON.stringify(arr, null, 2))
+              return
+            }
+
+            if (arr.length === 3) {
+              if (arr[1] === 'error' && typeof arr[2] === 'string') {
+                handleResponseError(id, arr[2])
+              }
+              else if (!Array.isArray(arr[1]) && typeof arr[1] == 'object' && arr[1] && (arr[2] === 'complete' || arr[2] === 'incomplete')) {
+                handleResponse(id, arr[1], arr[2] === 'complete')
+              }
+              else {
+                log(`invalid error payload ${str}`)
+              }
+              return
+            }
+
+            if (arr.length === 1) {
+              if (Array.isArray(arr[0]) || typeof arr[0] !== 'object' || !arr[0]) {
+                log(`invalid response payload ${str}`)
+                return handleMessage(arr[0])
+              }
+
+              log(`unhandled payload ${str}`)
+            }
           }
-
-          if (arr.length === 3) {
-            if (arr[1] === 'error' && typeof arr[2] === 'string') {
-              handleResponseError(id, arr[2])
-            }
-            else if (!Array.isArray(arr[1]) && typeof arr[1] == 'object' && arr[1] && (arr[2] === 'complete' || arr[2] === 'incomplete')) {
-              handleResponse(id, arr[1], arr[2] === 'complete')
-            }
-            else {
-              log(`invalid error payload ${str}`)
-            }
-            return
-          }
-
-          if (arr.length === 1) {
-            if (Array.isArray(arr[0]) || typeof arr[0] !== 'object' || !arr[0]) {
-              log(`invalid response payload ${str}`)
-              return handleMessage(arr[0])
-            }
-
+          else {
             log(`unhandled payload ${str}`)
           }
         }
-        else {
-          log(`unhandled payload ${str}`)
+        catch (_e) {
+          log(`non message payload ${str}`)
         }
-      }
-      catch (_e) {
-        log(`non message payload ${str}`)
-      }
-    })
+      })
+    }, 500)
   })
 }
 

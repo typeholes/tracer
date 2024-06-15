@@ -6,7 +6,7 @@ import { copy } from '@web/rollup-plugin-copy'
 
 export default defineConfig({
   external: [/^node:.*/],
-  input: ['./src/index.ts'],
+  input: ['./src/tracerServer.ts'],
   output: { format: 'cjs', dir: '../dist/server' },
   plugins: [esbuild(), resolve(), commonjs(), copy({ patterns: 'lib/**/*', rootDir: '../node_modules/typescript/' })],
 })

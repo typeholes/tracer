@@ -1,3 +1,4 @@
+/* eslint-disable node/prefer-global/process */
 /* eslint-disable no-console */
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
@@ -5,51 +6,68 @@ import { WebSocketServer } from 'ws'
 import type * as Messages from '../../shared/src/typebox'
 import { receiveMessage } from './receiveMessage.tb'
 
+let firstWsConnection: WebSocket | undefined
 export function init(port: number) {
   const wss = new WebSocketServer({ port })
 
   console.log('listening on 3010')
 
   wss.on('connection', (ws) => {
+    firstWsConnection ??= ws
     console.log('connected')
     ws.on('error', console.error)
 
     ws.on('message', (data) => {
       const str = data.toString()
       try {
-        const arr = JSON.parse(str)
-        if (Array.isArray(arr)) {
-          const [id, parsed] = arr
-          if (typeof id !== 'number') {
-            console.log('invalid message')
-            console.log(JSON.stringify(arr, null, 2))
-            return
-          }
-          if (arr.length !== 2) {
-            console.log('invalid message')
-            console.log(JSON.stringify(arr, null, 2))
-            sendError(ws, id, 'expected a single object payload')
-            return
-          }
-
-          if (Array.isArray(parsed)) {
-            sendError(ws, id, 'expected a single object payload')
-            console.log('unhandled payload')
-            for (const item of parsed) console.log(`\t ${item}`)
-          }
-          else if (typeof parsed === 'object') {
-            receiveMessage(id, parsed, ws)
-          }
-        }
-        else {
-          console.log(`string payload ${JSON.stringify(arr, null, 2)}`)
-        }
+        const payload = JSON.parse(str)
+        processMessagePayload(ws, payload)
       }
       catch (_e) {
         console.log(`non message payload ${str}`)
       }
     })
   })
+}
+
+process.on('message', (payload) => {
+  if (payload === 'exit')
+    process.exit()
+
+  else if (payload === 'ping')
+    console.log('ping message received')
+
+  else if (firstWsConnection)
+    processMessagePayload(firstWsConnection, payload)
+})
+
+function processMessagePayload(ws: WebSocket, payload: unknown) {
+  if (Array.isArray(payload)) {
+    const [id, parsed] = payload
+    if (typeof id !== 'number') {
+      console.log('invalid message')
+      console.log(JSON.stringify(payload, null, 2))
+      return
+    }
+    if (payload.length !== 2) {
+      console.log('invalid message')
+      console.log(JSON.stringify(payload, null, 2))
+      sendError(ws, id, 'expected a single object payload')
+      return
+    }
+
+    if (Array.isArray(parsed)) {
+      sendError(ws, id, 'expected a single object payload')
+      console.log('unhandled payload')
+      for (const item of parsed) console.log(`\t ${item}`)
+    }
+    else if (typeof parsed === 'object') {
+      receiveMessage(id, parsed, ws)
+    }
+  }
+  else {
+    console.log(`string payload ${JSON.stringify(payload, null, 2)}`)
+  }
 }
 
 // let messageHandler = (message: any) => console.log(message);
