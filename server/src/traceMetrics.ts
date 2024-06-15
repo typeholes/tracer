@@ -55,10 +55,11 @@ export function getStatsFromTree(fileName: string) {
   function visit(node: Tree) {
     if ('name' in node.line) {
       const line = node.line
+      const linePath = workspacePath.value ? join(workspacePath.value, line.args?.path ?? '') : line.args?.path
       if (
         line.dur
         && line.args?.path
-        && join(workspacePath.value, line.args.path) === fileName
+        && linePath === fileName
         && line.args?.pos
         && line.args?.end
       ) {

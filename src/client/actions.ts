@@ -8,7 +8,7 @@ import { log } from '../logger'
 import { wsMessage } from './client'
 
 export function runTrace(projectPath: string, traceDir: string) {
-  wsMessage('traceStart', { projectPath, traceDir }) (
+  wsMessage('traceStart', { projectPath: projectPath.replaceAll('\\', '/'), traceDir }) (
     'traceStop',
     () => traceRunning.value = false,
     (error: string) => {
@@ -39,7 +39,7 @@ export function filterTree(startsWith: string, sourceFileName: string, position:
 }
 
 export function getFileStats(fileName: string) {
-  wsMessage('fileStats', { fileName, stats: [] }) (
+  wsMessage('fileStats', { fileName: fileName.replaceAll('\\', '/'), stats: [] }) (
     'fileStats',
     message => addTraceDiagnostics(message.fileName, message.stats),
     (error: string) => {

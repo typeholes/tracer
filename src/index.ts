@@ -215,7 +215,7 @@ async function runDiagnostics(collection: vscode.DiagnosticCollection, filePath:
     const tsConfigFile = await getTsconfigFile(filePath)
     const rootDir = path.dirname(tsConfigFile.fsPath)
 
-    const openFiles = vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath)
+    const openFiles = vscode.window.visibleTextEditors.map(editor => editor.document.uri.fsPath.replaceAll('\\', '/'))
 
     const parsedCommandLine = await getParsedCommandLine(filePath)!
     const testPaths = getTestFileNames(parsedCommandLine.fileNames).filter(path => openFiles.includes(path))
