@@ -24,11 +24,7 @@ export function stopTracerServer() {
     serverProcess.kill()
 }
 
-export function initClient(context: vscode.ExtensionContext) {
-  const serverOutputChannel = vscode.window.createOutputChannel('Trace Server stderr')
-
-  context.subscriptions.push(serverOutputChannel)
-
+export function initClient() {
   let port = getCurrentConfig().traceServerPort
   if (port < 1) {
     log('getting random port')
@@ -50,13 +46,6 @@ export function initClient(context: vscode.ExtensionContext) {
   log(`shell: ${shell}`)
   serverProcess = fork(fullCmd, [`${port}`], { cwd: __dirname })
 
-  serverProcess.stderr?.on('data', (data) => {
-    const str = data.toString()
-    serverOutputChannel.append(str)
-    vscode.window.showErrorMessage(str)
-  })
-  serverProcess.stdout?.on('data', data => serverOutputChannel.append(data.toString()))
-
   serverProcess.on('error', (error) => {
     vscode.window.showErrorMessage(error.message)
   })
@@ -65,6 +54,15 @@ export function initClient(context: vscode.ExtensionContext) {
     serverProcess.send(payload as any)
   }
 
+  serverProcess.on('message', (message) => {
+    if (message && typeof message === 'object' && 'log' in message) {
+      const args = message.log
+      if (Array.isArray(args))
+        log(...args)
+      else
+        log(args)
+    }
+  })
   serverProcess.on('spawn', () => {
     setTimeout(() => {
       const ws = new WebSocket(`ws://localhost:${port}`)

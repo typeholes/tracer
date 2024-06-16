@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { performance } from 'node:perf_hooks'
 
 import type {
@@ -55,6 +54,7 @@ import {
 
 import type { Tree } from '../../shared/src/tree'
 import { tsdk } from './serverState'
+import { log } from './server'
 
 export type { Tree } from '../../shared/src/tree'
 
@@ -115,7 +115,7 @@ export function runLiveTrace(projectDirectory: string, traceDir: string) {
   const configFileName = findConfigFile(searchPath, fileName =>
     sys.fileExists(fileName))
   const reportDiagnostic = (_diagnostic: Diagnostic) => {
-    console.log(`${_diagnostic.messageText}`)
+    log(`${_diagnostic.messageText}`)
   }
 
   if (configFileName) {
@@ -190,7 +190,7 @@ function performCompilation(
     (a, b) => {
       if (b) {
         b.forEach((c) => {
-          console.log(`error at: ${c?.fileName}: ${c?.line}`)
+          log(`error at: ${c?.fileName}: ${c?.line}`)
         })
       }
     }, // createReportErrorSummary(sys, options),
@@ -228,7 +228,7 @@ export function createCompilerHostWorker(
     const loc = getDefaultLibLocation()
     const file = getDefaultLibFileName(options)
     const ret = combinePaths(loc, file)
-    console.log('default lib file name', ret)
+    log(['default lib file name', ret])
     return ret
   }
 
@@ -309,6 +309,9 @@ function enableTracing(
         if (typeDictionary.size === 0)
           holdRecordType(type) // need one or ts crashes
         typeDictionary.set(type.id, type)
+        if (!(typeDictionary.size % 10000))
+          log(`types created: ${typeDictionary.size}`)
+
         typeIdDictionary.set(type, type.id)
         tree.typeCnt = tree.typeIds.push(type.id)
       }

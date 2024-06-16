@@ -1,5 +1,4 @@
 /* eslint-disable node/prefer-global/process */
-/* eslint-disable no-console */
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 
@@ -10,11 +9,11 @@ let firstWsConnection: WebSocket | undefined
 export function init(port: number) {
   const wss = new WebSocketServer({ port })
 
-  console.log('listening on 3010')
+  log('listening on 3010')
 
   wss.on('connection', (ws) => {
     firstWsConnection ??= ws
-    console.log('connected')
+    log('connected')
     ws.on('error', console.error)
 
     ws.on('message', (data) => {
@@ -24,10 +23,14 @@ export function init(port: number) {
         processMessagePayload(ws, payload)
       }
       catch (_e) {
-        console.log(`non message payload ${str}`)
+        log(`non message payload ${str}`)
       }
     })
   })
+}
+
+export function log(message: any) {
+  process.send?.({ log: message })
 }
 
 process.on('message', (payload) => {
@@ -35,7 +38,7 @@ process.on('message', (payload) => {
     process.exit()
 
   else if (payload === 'ping')
-    console.log('ping message received')
+    log('ping message received')
 
   else if (firstWsConnection)
     processMessagePayload(firstWsConnection, payload)
@@ -45,32 +48,32 @@ function processMessagePayload(ws: WebSocket, payload: unknown) {
   if (Array.isArray(payload)) {
     const [id, parsed] = payload
     if (typeof id !== 'number') {
-      console.log('invalid message')
-      console.log(JSON.stringify(payload, null, 2))
+      log('invalid message')
+      log(JSON.stringify(payload, null, 2))
       return
     }
     if (payload.length !== 2) {
-      console.log('invalid message')
-      console.log(JSON.stringify(payload, null, 2))
+      log('invalid message')
+      log(JSON.stringify(payload, null, 2))
       sendError(ws, id, 'expected a single object payload')
       return
     }
 
     if (Array.isArray(parsed)) {
       sendError(ws, id, 'expected a single object payload')
-      console.log('unhandled payload')
-      for (const item of parsed) console.log(`\t ${item}`)
+      log('unhandled payload')
+      for (const item of parsed) log(`\t ${item}`)
     }
     else if (typeof parsed === 'object') {
       receiveMessage(id, parsed, ws)
     }
   }
   else {
-    console.log(`string payload ${JSON.stringify(payload, null, 2)}`)
+    log(`string payload ${JSON.stringify(payload, null, 2)}`)
   }
 }
 
-// let messageHandler = (message: any) => console.log(message);
+// let messageHandler = (message: any) => log(message);
 // export function setMessageHandler(handler: (message: any) => void) {
 //    messageHandler = handler;
 // }
@@ -82,19 +85,19 @@ function processMessagePayload(ws: WebSocket, payload: unknown) {
 /*
 io.on('connection', (socket) => {
    globalSocket = socket; // dumb but good enough.  latest connection get's the vscode emits
-   console.log('a user connected');
+   log('a user connected');
    messageHandler('init client');
    socket.on('message', (...args: any[]) => {
       receiveMessage(args, socket);
    });
    socket.on('ping', () => {
-      console.log('pinged');
+      log('pinged');
       socket.emit('pong');
    });
 });
 
 server.listen(3010, 'localhost', () => {
-   console.log('server running at http://localhost:3010');
+   log('server running at http://localhost:3010');
 });
 
 */

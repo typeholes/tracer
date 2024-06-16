@@ -1,5 +1,6 @@
 import path from 'node:path'
 import * as vscode from 'vscode'
+import { log } from './logger'
 
 let ts: typeof import('typescript')
 let tsPath: string
@@ -33,8 +34,7 @@ export function setTsPath(mode: string, explicitPath: string) {
       tsPath = getWorkspaceTsPath()
       break
   }
-  // eslint-disable-next-line no-console
-  console.log(tsPath)
+  log(tsPath)
   return tsPath
 }
 

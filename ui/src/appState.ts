@@ -54,8 +54,6 @@ function handleMessage(e: MessageEvent<unknown>) {
       const id = e.data.id
       const children = childrenById.get(id) ?? []
       childrenById.set(id, [...children, ...(e.data as any).children])
-      // eslint-disable-next-line no-console
-      console.log('received children by id', id, children.length)
       break
     }
     case 'typesById': {

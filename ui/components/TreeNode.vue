@@ -48,8 +48,6 @@ const childrenExpand = ref(props.forceExpand)
 
 onBeforeMount(() => {
   if (props.forceExpand && children.value.length === 0) {
-  // eslint-disable-next-line no-console
-    console.log('force expanding', props.tree.id)
     sendMessage('childrenById', { id: props.tree.id })
   }
 })
